@@ -1,0 +1,23 @@
+FEATURE THAT WILL BE IMPLEMENTED:
+	- MULTIVERSE
+		The script will be able to manage different server versions (ex 1.16.4, 1.16.3, 1.17.1 1.15.1 ...). The versions resides in specific folders.
+		
+		Implementation:
+			different folders, 1 for each server version in use. A server version in use is a server.jar file which has at least a world directory associated to it.
+		Functions:
+			addUniverse: check if the wanted version is already available. If not check the existence of that instance and downloads it.
+			removeUniverse: deletes a server.jar file and its related data. NOTE: WHAT TO DO WITH THE WORLD DATA? RECOVER IT, PORT IT TO A NEWER UNIVERSE?
+
+	- MULTIWORLD
+		Allow multiple worlds refer to a single server.jar files, in order to play in different worlds, not having to change version.
+		
+		Implementation:
+			Dedicated world directories inside each server version folder. NOTE: HOW TO MANAGE SERVER-SPECIFIC DATA SUCH AS OPERATORS, BANNED IPS AND SO ON?? FLAG THEM FOR THE WORLD?
+			KEEP A COPY OF THEM INSIDE WORLD DIRECTORY?
+			
+		Functions:
+			addWorld: Make a new directory that will match the name of the new world. When the server will be started for the first time, it will set everything.
+			removeWorld: deletes the entire directory and all of its data.
+			copyWorld: just copies a target world into another.
+			backupWorld (already implemented functions, just updated and customized)
+			restoreWorld ( // )
