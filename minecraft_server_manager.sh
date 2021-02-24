@@ -1,8 +1,12 @@
 #!/bin/bash
 
 # 1 - INTERNAL VARIABLES SECTION
-SERVER_DIR="minecraft_server"
+WORK_DIR="minecraft_server"
+SERVER_DIR="servers"
 BCKP_DIR="world_backup"
+
+SCRIPT_CONFIG_FILE="minecraft_server_manager.cfg"
+WORLD_CONFIG_FILE=""
 
 SERVER_FILENAME="server"
 WORLD_DIR="world"
@@ -15,6 +19,7 @@ STATUS=0
 
 BCKP_HISTORY=5
 FORCE_UPDATE="0"
+LD_RAM=""
 # END - 1
 
 
@@ -146,7 +151,7 @@ function serverUpdater {
 		echo "[$(date +%T)] [script/INFO]: Downloading the server jar file"
 		JAR_URL=$(curl -s $PACKAGE_URL | jq -r ".downloads.server.url")
 		#mv "$SERVER_FILENAME.jar" "$SERVER_FILENAME.jar.old"
-		wget --output-document="$SERVER_FILENAME.jar.tmp" -q $JAR_URL
+		wget --output-document="$SERVER_FILENAME.jar.tmp" -q --show-progress $JAR_URL
 		if [ ! -e "$SERVER_FILENAME.jar" ]; then
 			echo -e "\e[31m[$(date +%T)] [script/ERROR]: Server jar file cannot be downloaded\e[0m"
 			#mv "$SERVER_FILENAME.jar" "$SERVER_FILENAME.jar.old"
@@ -229,6 +234,7 @@ function backUpRestorer {
 	done
 }
 
+# HELP
 function print_usage {
 	echo "Usage:"
 	echo -e "\t$0 --start [or empty]: start the server, creates the backup after closing it and remove the oldest"
@@ -237,8 +243,40 @@ function print_usage {
 	echo -e "\t$0 --settings-restore: restores the settings. \e[4mNote\e[0m: It overwrites the current one !!!"
 }
 
+# CHECK FOR CONFIGURATION AND MODIFIES IT
+function configRoutine {
+	if [ -e "$SCRIPT_CONFIG_FILE" ]; then
+		echo "[$(date +%T)] [script/INFO]: Fetching global configurations..."
+		tmp=$(jq -r ".loadInRam")
+		if [ -z "$tmp" ]; then	# CHECK IF FILES HAVE TO BE LOADED INTO RAM FOR FASTER LOADINGS
+			LD_RAM="false"
+		elif [[ "$tmp" = "true" || "$tmp" = "false" ]]; then
+			LD_RAM="$tmp"
+		else
+			echo "[$(date +%T)] [script/WARNING]: Invalid option! Fall back to safe option"
+			LD_RAM="false"
+		fi
+	else
+		configNew
+	fi
+}
+
+# CREATE A NEW CONFIGURATION FILE
+function configNew {
+	read -p 'Would you like to set the configuration file to default?[Y/n] ' proceed
+	if [[ "$proceed" = "n" || "$proceed" = "N" ]]; then
+		tmpJson=""
+		jq -Rn
+		echo "" > "$SCRIPT_CONFIG_FILE"
+	else
+	fi
+}
+
 
 intro
+
+configRoutine
+
 argumentsChecker $#
 directoryChecker
 cd minecraft_server
@@ -272,34 +310,3 @@ case $1 in
 		print_usage
 	;;		
 esac
-
-
-#	if [ -e "$VERSION_FILE" -a -s "$VERSION_FILE" ]; then
-#		CURRENT_VERS=$(jq -r '.latest.release' < version_manifest.json)
-#		echo "[$(date +%T)] [script/INFO]: Version file has been found, version has been loaded: $CURRENT_VERS"
-#	else
-#		CURRENT_VERS=$(ls | grep jar)
-#		START_DELIM_POS=$(( $(strindex $CURRENT_VERS .) + 1 ))
-#		END_DELIM_POS=$(( $(delim $CURRENT_VERS .) - $(strindex $CURRENT_VERS .) - 1))
-#		CURRENT_VERS="${CURRENT_VERS:$START_DELIM_POS:$END_DELIM_POS}"
-#		echo "[$(date +%T)] [script/INFO]: Version file not found, version retrieved from jar filename, hope no one changed it"
-#	fi
-
-
-	#ZIP_DESTIN_STRING="$JAR_BCKP/$CURRENT_VERS"
-	#ZIP_SOURCE_STRING="$SERVER_DIR.$CURRENT_VERS.jar"
-#echo "[$(date +%T)] [script/INFO]: Backing up the server jar file and its info..."
-			#if [ -e "$VERSION_FILE" ]; then
-			#	ZIP_SOURCE_STRING="$ZIP_SOURCE_STRING $VERSION_FILE"
-			#fi
-			#zip -qrT  "$ZIP_DESTIN_STRING" "$ZIP_SOURCE_STRING"
-			#if (( $? == 0 )); then
-			#	echo "[$(date +%T)] [script/INFO]: Server jar file backed up"
-			#else
-			#	echo -e "\e[33m[$(date +%T)] [script/ERROR]: Server jar file cant be backed up"
-			#fi
-			# DOWNLOAD VERSION FILE
-			#echo "[$(date +%T)] [script/INFO]: Downloading the server jar version manifest"
-			#curl -s "$MANIFEST_URL" > $VERSION_FILE
-			#echo "[$(date +%T)] [script/INFO]: Done"
-			# DOWNLOAD JAR FILE
