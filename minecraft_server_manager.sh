@@ -272,34 +272,3 @@ case $1 in
 		print_usage
 	;;		
 esac
-
-
-#	if [ -e "$VERSION_FILE" -a -s "$VERSION_FILE" ]; then
-#		CURRENT_VERS=$(jq -r '.latest.release' < version_manifest.json)
-#		echo "[$(date +%T)] [script/INFO]: Version file has been found, version has been loaded: $CURRENT_VERS"
-#	else
-#		CURRENT_VERS=$(ls | grep jar)
-#		START_DELIM_POS=$(( $(strindex $CURRENT_VERS .) + 1 ))
-#		END_DELIM_POS=$(( $(delim $CURRENT_VERS .) - $(strindex $CURRENT_VERS .) - 1))
-#		CURRENT_VERS="${CURRENT_VERS:$START_DELIM_POS:$END_DELIM_POS}"
-#		echo "[$(date +%T)] [script/INFO]: Version file not found, version retrieved from jar filename, hope no one changed it"
-#	fi
-
-
-	#ZIP_DESTIN_STRING="$JAR_BCKP/$CURRENT_VERS"
-	#ZIP_SOURCE_STRING="$SERVER_DIR.$CURRENT_VERS.jar"
-#echo "[$(date +%T)] [script/INFO]: Backing up the server jar file and its info..."
-			#if [ -e "$VERSION_FILE" ]; then
-			#	ZIP_SOURCE_STRING="$ZIP_SOURCE_STRING $VERSION_FILE"
-			#fi
-			#zip -qrT  "$ZIP_DESTIN_STRING" "$ZIP_SOURCE_STRING"
-			#if (( $? == 0 )); then
-			#	echo "[$(date +%T)] [script/INFO]: Server jar file backed up"
-			#else
-			#	echo -e "\e[33m[$(date +%T)] [script/ERROR]: Server jar file cant be backed up"
-			#fi
-			# DOWNLOAD VERSION FILE
-			#echo "[$(date +%T)] [script/INFO]: Downloading the server jar version manifest"
-			#curl -s "$MANIFEST_URL" > $VERSION_FILE
-			#echo "[$(date +%T)] [script/INFO]: Done"
-			# DOWNLOAD JAR FILE
