@@ -37,7 +37,7 @@ function intro {
 	echo "################################################################################"
 	echo -e "#  \e[1mMinecraft Server Manager\e[0m"
 	echo "#  dev by: Luca Lombardini"
-	echo "#  version: 0.1.4"
+	echo "#  version: 1.0"
 	echo "#  released: 23/09/2020"
 	echo "################################################################################"
 }
