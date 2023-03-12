@@ -1,26 +1,20 @@
 #!/bin/bash
 
-# 1	- INTERNAL VARIABLES SECTION
-# 1_1	- SCRIPT VARIABLES
+# 1 - INTERNAL VARIABLES SECTION
+SERVER_DIR="minecraft_server"
+BCKP_DIR="world_backup"
+
+SERVER_FILENAME="server"
+WORLD_DIR="world"
+
+MANIFEST_URL="https://launchermeta.mojang.com/mc/game/version_manifest.json"
+
+LOCAL_VERS=""
 MAX_ARG_NO=1
 STATUS=0
+
 BCKP_HISTORY=5
 FORCE_UPDATE="0"
-LD_RAM=""
-# 1_2	- PATH SPEC. VARIABLES
-WORK_DIR="minecraft_server"
-SERVER_DIR="servers"
-DATA_DIR="data"
-GALAXY_BASE=""
-BCKP_DIR="backup"
-# 1_3	- CONFIGURATION VARIABLES
-SCRIPT_CONFIG_FILE="global.cfg"
-WORLD_CONFIG_FILE="world.cfg"
-# 1_4	- STARTUP VARIABLES
-SERVER_VERS=""		# from world.cfg
-WORLD_DIR=""		# from command?
-# 1_5	- UPDATE VARIABLES
-MANIFEST_URL="https://launchermeta.mojang.com/mc/game/version_manifest.json"
 # END - 1
 
 
@@ -43,28 +37,16 @@ function intro {
 	echo "################################################################################"
 	echo -e "#  \e[1mMinecraft Server Manager\e[0m"
 	echo "#  dev by: Luca Lombardini"
-	echo "#  version: 0.2.0"
-	echo "#  released: /02/2021"
+	echo "#  version: 0.1.4"
+	echo "#  released: 23/09/2020"
 	echo "################################################################################"
 }
 # END - 3_1
 
-function checkGlobalCfg {
-	if [ -e "$SCRIPT_CONFIG_FILE" ]; then
-		echo "[$(date +%T)] [script/INFO]: Global configuration file found" 
-	else
-		read -p "[$(date +%T)] [script/INFO]: Configuration file not found! Would you like to create it now?[Y/n] " proceed
-		if [[ "$proceed" =~ ^[Y|y][(E|e)(S|s)]? ]]; then
-			echo ""
-		else
-			echo ""
-		fi
-	fi
-}
 
 # 3_2 - CHECK INPUT ARGUMENTS [ DA RISTRUTTURARE ]
 function argumentsChecker {
-	if [ $# -gt $MAX_ARG_NO ]; then
+	if [ $1 -gt $MAX_ARG_NO ]; then
 		echo -e "\e[33m[$(date +%T)] [script/NOTE]: too much argument passed thus ignoring the exceeding ones\e[0m"
 	fi
 }
@@ -112,7 +94,7 @@ function localVersionRetriever {
 	for (( i = 0; FLAG_FOUND == 0; i++ )); do
 		PACKAGE_URL=$(jq -r ".versions[$i].url" <<< "$VERSION_MANIFEST")
 		if [[ "$PACKAGE_URL" == "null" ]]; then
-			echo -e "\e[33m[$(date +%T)] [script/WARNING]: Server version not found\e[0m"
+			echo "[$(date +%T)] [script/WARNING]: Server version not found"
 			break
 		else
 			SHA1_REF=$(curl -s "$PACKAGE_URL" | jq -r ".downloads.server.sha1")
@@ -153,8 +135,8 @@ function serverUpdater {
 	
 	PACKAGE_URL=$(jq -r --arg TARGET_VERS $TARGET_VERS '.versions | .[] | select(.id==$TARGET_VERS) | .url' <<< "$MANIFEST_DATA")
 	if [ -z "$PACKAGE_URL" ]; then
-		echo -e "\e[33m[$(date +%T)] [script/WARNING]: This server version does not exist. Check if is correct\e[0m"
-	elif [[ "$FORCE_UPDATE" == "0" ]]; then
+		echo "[$(date +%T)] [script/WARNING]: This server version does not exist. Check if is correct"
+	elif [[ "$FORCE_UPDATE" = "0" ]]; then
 		read -p 'Would you like to download it now? This will overwrite the previous file![y/N] ' proceed
 	else
 		proceed="y"
@@ -237,7 +219,7 @@ function backUpRestorer {
 	select bckp in $(ls "$BCKP_DIR" | grep "$WORLD_DIR.\+\.zip" | sort "-r"); do
 		if [ ! -z "$bckp" ]; then
 			read -p 'This action will overwrite the current world data! Would you like to proceed anyways?[y/N] ' proceed
-			if [[ "$proceed" == "y" || "$proceed" == "Y" ]]; then
+			if [[ "$proceed" = "y" || "$proceed" = "Y" ]]; then
 				echo "[$(date +%T)] [script/INFO]: Restoring the server world..."
 				unzip -qqto "$BCKP_DIR/$bckp"
 				echo "[$(date +%T)] [script/INFO]: Done!"
@@ -247,7 +229,6 @@ function backUpRestorer {
 	done
 }
 
-# HELP
 function print_usage {
 	echo "Usage:"
 	echo -e "\t$0 --start [or empty]: start the server, creates the backup after closing it and remove the oldest"
@@ -256,41 +237,8 @@ function print_usage {
 	echo -e "\t$0 --settings-restore: restores the settings. \e[4mNote\e[0m: It overwrites the current one !!!"
 }
 
-# CHECK FOR CONFIGURATION AND MODIFIES IT
-function configRoutine {
-	if [ -e "$SCRIPT_CONFIG_FILE" ]; then
-		echo "[$(date +%T)] [script/INFO]: Fetching global configurations..."
-		tmp=$(jq -r ".loadInRam")
-		if [ -z "$tmp" ]; then	# CHECK IF FILES HAVE TO BE LOADED INTO RAM FOR FASTER LOADINGS
-			LD_RAM="false"
-		elif [[ "$tmp" == "true" || "$tmp" == "false" ]]; then
-			LD_RAM="$tmp"
-		else
-			echo "[$(date +%T)] [script/WARNING]: Invalid option! Fall back to safe option"
-			LD_RAM="false"
-		fi
-	else
-		configNew
-	fi
-}
-
-# CREATE A NEW CONFIGURATION FILE
-function configNew {
-	read -p 'Would you like to set the configuration file to default?[Y/n] ' proceed
-	if [[ "$proceed" == "n" || "$proceed" == "N" ]]; then
-		tmpJson=""
-		jq -Rn
-		echo "" > "$SCRIPT_CONFIG_FILE"
-	else
-		echo ""
-	fi
-}
-
 
 intro
-
-#configRoutine
-
 argumentsChecker $#
 directoryChecker
 cd minecraft_server
